@@ -19,7 +19,17 @@ import org.json.JSONObject
  * `/playlist.m3u` and `/epg.xml`, which are handed to the existing M3U import, so the fixtures land in
  * the normal channel table and the Sports Hub matches them against ESPN like any other channel.
  */
-class AddonClient(private val client: OkHttpClient) {
+class AddonClient(client: OkHttpClient) {
+
+    /**
+     * The app's shared client, narrowed with the addon's own timeouts. The addon answers from cache in
+     * milliseconds; a long wait only ever means the address is wrong, and a TV user staring at
+     * "checking…" is worse served by the shared client's playback-oriented timeouts.
+     */
+    private val client: OkHttpClient = client.newBuilder()
+        .connectTimeout(CONNECT_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(READ_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
 
     /** One live fixture as the addon reports it. */
     data class Fixture(
@@ -40,12 +50,30 @@ class AddonClient(private val client: OkHttpClient) {
         val liveCount: Int get() = fixtures.count { it.live }
     }
 
+    /** Why the addon could not be read. The screen turns each into a translated sentence. */
+    enum class Failure {
+        /** The host name does not resolve at all — on Android TV this is every `.local` name. */
+        UNRESOLVED_HOST,
+
+        /** The name resolved but nothing answered: wrong port, server down, other network. */
+        UNREACHABLE,
+
+        /** The addon answered, but not with a success status. */
+        HTTP,
+
+        /** Something answered, but it is not an addon: no JSON manifest at that address. */
+        NOT_AN_ADDON,
+    }
+
     /**
-     * The addon could not be read: [httpCode] is the status when there was one, 0 when the request
-     * never got an answer. Deliberately carries no message text — the screen renders a translated
-     * sentence from it, so no English is baked into the client.
+     * The addon could not be read. [httpCode] is the status when [failure] is [Failure.HTTP], 0
+     * otherwise. Deliberately carries no message text — the screen renders a translated sentence
+     * from it, so no English is baked into the client.
      */
-    class AddonException(val httpCode: Int = 0) : java.io.IOException()
+    class AddonException(
+        val failure: Failure = Failure.UNREACHABLE,
+        val httpCode: Int = 0,
+    ) : java.io.IOException()
 
     /**
      * Normalises what the user typed into a base URL: adds `http://` when no scheme is given and
@@ -73,7 +101,7 @@ class AddonClient(private val client: OkHttpClient) {
      */
     suspend fun load(baseUrl: String): Snapshot = withContext(Dispatchers.IO) {
         val base = normaliseBaseUrl(baseUrl)
-        if (base.isEmpty()) throw AddonException()
+        if (base.isEmpty()) throw AddonException(Failure.UNREACHABLE)
 
         val manifest = getJson("$base$PATH_MANIFEST")
         val name = manifest.optString(KEY_NAME).ifBlank { FALLBACK_NAME }
@@ -95,9 +123,23 @@ class AddonClient(private val client: OkHttpClient) {
             .url(url)
             .header(HEADER_ACCEPT, MIME_JSON)
             .build()
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw AddonException(response.code)
-            return JSONObject(response.body.string())
+        val body = try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw AddonException(Failure.HTTP, response.code)
+                response.body.string()
+            }
+        } catch (error: java.net.UnknownHostException) {
+            // Android has no mDNS resolver for plain HTTP clients, so every `.local` name lands here.
+            throw AddonException(Failure.UNRESOLVED_HOST)
+        } catch (error: java.io.IOException) {
+            if (error is AddonException) throw error
+            throw AddonException(Failure.UNREACHABLE)
+        }
+        return try {
+            JSONObject(body)
+        } catch (error: org.json.JSONException) {
+            // Something answered, but it is not this addon (a router page, another service).
+            throw AddonException(Failure.NOT_AN_ADDON)
         }
     }
 
@@ -111,6 +153,8 @@ class AddonClient(private val client: OkHttpClient) {
         private const val HEADER_ACCEPT = "accept"
         private const val MIME_JSON = "application/json"
         private const val FALLBACK_NAME = "StreamFree"
+        private const val CONNECT_TIMEOUT_SECONDS = 4L
+        private const val READ_TIMEOUT_SECONDS = 10L
 
         private const val KEY_NAME = "name"
         private const val KEY_VERSION = "version"

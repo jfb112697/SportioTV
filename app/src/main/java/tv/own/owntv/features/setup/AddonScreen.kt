@@ -69,7 +69,9 @@ fun AddonScreen(
                 .fold(
                     onSuccess = { AddonUi.Ready(it) },
                     onFailure = { error ->
-                        AddonUi.Failed((error as? AddonClient.AddonException)?.httpCode ?: 0)
+                        val failure = (error as? AddonClient.AddonException)
+                            ?: AddonClient.AddonException(AddonClient.Failure.UNREACHABLE)
+                        AddonUi.Failed(failure.failure, failure.httpCode)
                     },
                 )
         }
@@ -195,11 +197,7 @@ fun AddonScreen(
             is AddonUi.Failed -> {
                 StageSettingsHeading(stringResource(R.string.addon_problem), null)
                 Text(
-                    if (s.httpCode > 0) {
-                        stringResource(R.string.addon_failed_http, s.httpCode)
-                    } else {
-                        stringResource(R.string.addon_line_failed)
-                    },
+                    addonFailureText(s),
                     style = stageText(16, 500),
                     color = StageColors.Muted,
                     modifier = Modifier.padding(start = 22.mpx, top = 6.mpx),
@@ -215,21 +213,37 @@ private sealed interface AddonUi {
     data object Idle : AddonUi
     data object Checking : AddonUi
     data class Ready(val snapshot: AddonClient.Snapshot) : AddonUi
-    data class Failed(val httpCode: Int) : AddonUi
+    data class Failed(val failure: AddonClient.Failure, val httpCode: Int) : AddonUi
 }
 
 /** How many preview rows the screen shows before collapsing into "+N more". */
 private const val PreviewRows = 8
 
 /**
- * Where the addon normally lives. A default, not a secret: it is the LAN hostname the compose stack on
- * `server.local` publishes, and the field stays editable for anyone hosting their own.
+ * Where the addon normally lives: the LAN address of the machine running the compose stack.
+ *
+ * Deliberately an **IP, not `server.local`**: Android TV has no mDNS resolver for ordinary HTTP
+ * clients, so a `.local` name fails there (after a slow lookup) even though it resolves on a desktop.
+ * The field stays editable, and a different address can be typed over it.
  */
-private const val DefaultAddonAddress = "http://server.local:7100"
+private const val DefaultAddonAddress = "http://192.168.1.71:7100"
 
 /** `Today 20:30` / `Nov 8, 20:30` in the device's own zone. */
 private fun kickoff(startSeconds: Long?): String {
     if (startSeconds == null || startSeconds <= 0) return ""
     val formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
     return formatter.format(Date(startSeconds * 1000))
+}
+
+/**
+ * One sentence per failure kind. The distinctions matter on a TV where the address is typed with a
+ * remote: "the name did not resolve" (a `.local` name, or a typo) is a different problem from "the
+ * machine is not answering on that port", and neither is the same as "something else answered".
+ */
+@Composable
+private fun addonFailureText(failed: AddonUi.Failed): String = when (failed.failure) {
+    AddonClient.Failure.UNRESOLVED_HOST -> stringResource(R.string.addon_failed_host)
+    AddonClient.Failure.UNREACHABLE -> stringResource(R.string.addon_failed_unreachable)
+    AddonClient.Failure.NOT_AN_ADDON -> stringResource(R.string.addon_failed_not_addon)
+    AddonClient.Failure.HTTP -> stringResource(R.string.addon_failed_http, failed.httpCode)
 }

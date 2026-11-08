@@ -79,7 +79,14 @@ class AddonClientTest {
     @Test
     fun `playlist and guide URLs sit under the base`() {
         val client = AddonClient(okhttp3.OkHttpClient())
-        assertEquals("http://server.local:7100/playlist.m3u", client.playlistUrl("server.local:7100"))
-        assertEquals("http://server.local:7100/epg.xml", client.epgUrl("server.local:7100/"))
+        assertEquals("http://192.168.1.71:7100/playlist.m3u", client.playlistUrl("192.168.1.71:7100"))
+        assertEquals("http://192.168.1.71:7100/epg.xml", client.epgUrl("192.168.1.71:7100/"))
+    }
+
+    @Test
+    fun `a numeric address is normalised without touching the scheme`() {
+        val client = AddonClient(okhttp3.OkHttpClient())
+        assertEquals("http://192.168.1.71:7100", client.normaliseBaseUrl("192.168.1.71:7100"))
+        assertEquals("http://192.168.1.71:7100", client.normaliseBaseUrl("http://192.168.1.71:7100/"))
     }
 }

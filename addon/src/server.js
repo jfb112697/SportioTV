@@ -268,7 +268,12 @@ export function createServer() {
       .catch((error) => fail(res, error))
       .finally(() => {
         if (config.logRequests) {
-          console.log(`${req.method} ${req.url} -> ${res.statusCode} ${Date.now() - started}ms`);
+          // The client address is the first thing to look at when a TV says "it did not answer":
+          // it tells a request that never arrived apart from one that arrived and failed.
+          const client = String(req.socket.remoteAddress || "").replace(/^::ffff:/, "");
+          console.log(
+            `${client} ${req.method} ${req.url} -> ${res.statusCode} ${Date.now() - started}ms`,
+          );
         }
       });
   });

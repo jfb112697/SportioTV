@@ -178,6 +178,9 @@
     <string name="addon_line_check">Die Spieleliste vom Addon holen</string>
     <string name="addon_line_ready">Addon erreichbar</string>
     <string name="addon_line_failed">Das Addon hat nicht geantwortet</string>
+    <string name="addon_failed_host">Diese Adresse ließ sich nicht auflösen. Nimm die numerische Adresse des Servers (zum Beispiel 192.168.1.71), keinen .local-Namen.</string>
+    <string name="addon_failed_unreachable">Unter dieser Adresse antwortet nichts. Prüfe den Port und ob das Addon auf dem Server läuft.</string>
+    <string name="addon_failed_not_addon">Es hat etwas geantwortet, aber nicht dieses Addon.</string>
     <string name="addon_failed_http">Das Addon antwortete mit HTTP %1$d</string>
     <string name="addon_status_failed">Fehlgeschlagen</string>
     <string name="addon_live_now">Jetzt live</string>

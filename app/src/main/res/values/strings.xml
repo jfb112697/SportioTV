@@ -178,6 +178,9 @@
     <string name="addon_line_check">Fetch the fixture list from the addon</string>
     <string name="addon_line_ready">Addon reachable</string>
     <string name="addon_line_failed">The addon did not answer</string>
+    <string name="addon_failed_host">That address could not be resolved. Use the numeric address of the server (for example 192.168.1.71), not a .local name.</string>
+    <string name="addon_failed_unreachable">Nothing answered at that address. Check the port and that the addon is running on the server.</string>
+    <string name="addon_failed_not_addon">Something answered, but it is not this addon.</string>
     <string name="addon_failed_http">The addon answered with HTTP %1$d</string>
     <string name="addon_status_failed">Failed</string>
     <string name="addon_live_now">Live now</string>
