@@ -176,4 +176,7 @@ test("addonId / keyFromAddonId round-trip", () => {
   assert.equal(keyFromAddonId(addonId(fixture)), KEY);
   assert.equal(keyFromAddonId(KEY), KEY);
   assert.equal(keyFromAddonId(encodeURIComponent(`sf:${KEY}`)), KEY);
+  // Stremio clients ask for /meta/tv/<id>.json — the transport suffix is not part of the id.
+  assert.equal(keyFromAddonId(`${encodeURIComponent(`sf:${KEY}`)}.json`), KEY);
+  assert.equal(keyFromAddonId(`${KEY}.json`), KEY);
 });

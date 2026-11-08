@@ -34,6 +34,7 @@ import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.setup.SourceImporter
+import tv.own.owntv.core.settings.PlaylistRefresh
 import tv.own.owntv.core.sync.importProgressDisplay
 import tv.own.owntv.core.theme.UiFontScale
 import tv.own.owntv.core.theme.UiZoom

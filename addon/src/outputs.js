@@ -20,9 +20,12 @@ export function addonId(fixture) {
   return fixture.id.startsWith("sf:") ? fixture.id : `sf:${fixture.key}`;
 }
 
-/** Accepts `sf:key`, `key`, or a full `/stream/...` path segment. */
+/**
+ * Accepts `sf:key`, `key`, `sf:key.json` or a full `/stream/tv/…` path segment. Stremio clients
+ * request `/meta/tv/<id>.json`, so the transport suffix is not part of the id.
+ */
 export function keyFromAddonId(id) {
-  const raw = decodeURIComponent(String(id || "")).trim();
+  const raw = decodeURIComponent(String(id || "")).trim().replace(/\.json$/i, "");
   return raw.startsWith("sf:") ? raw.slice(3) : raw;
 }
 
