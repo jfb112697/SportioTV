@@ -1,0 +1,17 @@
+{
+  "name": "sportio-streamfree-addon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hosted StreamFree addon for Sportio: fixtures as channels, resolved playable streams, M3U + XMLTV + a Stremio-shaped JSON API.",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node test/addon.test.js"
+  },
+  "license": "GPL-3.0-or-later"
+}

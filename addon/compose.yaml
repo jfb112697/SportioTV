@@ -1,0 +1,35 @@
+# Purpose: the compose stack deployed on server.local — the StreamFree addon alone on port 7100.
+# Status: 2026-11-07.
+
+services:
+  sportio-addon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sportio-addon:local
+    container_name: sportio-addon
+    restart: unless-stopped
+    ports:
+      - "7100:7100"
+    environment:
+      PORT: "7100"
+      HOST: "0.0.0.0"
+      # Leave PUBLIC_BASE_URL empty to derive it from the request's Host header (works for
+      # http://server.local:7100 and for a Cloudflare hostname in front of it). Set it explicitly
+      # only when the addon sits behind a proxy that rewrites Host.
+      PUBLIC_BASE_URL: "${PUBLIC_BASE_URL:-}"
+      DEFAULT_TIMEZONE: "${DEFAULT_TIMEZONE:-America/New_York}"
+      # Empty publishes every StreamFree category. Narrow it, e.g. "basketball:nba,football:nfl".
+      LEAGUE_FILTERS: "${LEAGUE_FILTERS:-}"
+      CATALOG_TTL_MS: "${CATALOG_TTL_MS:-30000}"
+      LOG_REQUESTS: "${LOG_REQUESTS:-1}"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:7100/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

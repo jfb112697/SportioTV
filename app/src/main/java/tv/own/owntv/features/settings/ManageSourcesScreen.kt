@@ -59,6 +59,7 @@ import tv.own.owntv.core.settings.PlaylistRefresh
 import tv.own.owntv.features.setup.playlistAutoRefreshLabel
 import tv.own.owntv.features.setup.AddSourceChooserScreen
 import tv.own.owntv.features.setup.AddSourceScreen
+import tv.own.owntv.features.setup.AddonScreen
 import tv.own.owntv.features.setup.RemoteSetupScreen
 import tv.own.owntv.ui.components.OwnTVButton
 import tv.own.owntv.ui.components.OwnTVButtonStyle
@@ -192,6 +193,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     null -> AddSourceChooserScreen(
                         onRemote = { addMode = AddMode.REMOTE },
                         onManual = { addMode = AddMode.MANUAL },
+                        onAddon = { addMode = AddMode.ADDON },
                         onBack = { showAdd = false },
                         modifier = Modifier,
                     )
@@ -224,6 +226,15 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onBack = { addMode = null },
                         modifier = Modifier,
                         initial = vm.lastFailedSource, // pre-fill on retry — no re-typing after a typo
+                    )
+                    // The hosted addon is added as an ordinary M3U playlist (its own /playlist.m3u),
+                    // which is what puts its fixtures in the channel table for the Sports hub.
+                    AddMode.ADDON -> AddonScreen(
+                        onAdd = { name, playlistUrl, epgUrl ->
+                            vm.addM3u(name.ifBlank { defaultPlaylistName }, playlistUrl, "", epgUrl, PlaylistRefresh.OFF, false)
+                        },
+                        onBack = { addMode = null },
+                        modifier = Modifier,
                     )
                 }
                 SettingsViewModel.ImportState.Running -> CenterStatus {
@@ -577,7 +588,7 @@ private fun ResyncChoiceDialog(
 }
 
 /** How the user chose to add a source: fill it from another device (Remote) or type it here (Manual). */
-private enum class AddMode { REMOTE, MANUAL }
+private enum class AddMode { REMOTE, MANUAL, ADDON }
 
 /**
  * Result of the row's "Test" button: is the server reachable, is the subscription still good, and how

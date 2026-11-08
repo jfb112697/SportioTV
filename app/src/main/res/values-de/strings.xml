@@ -170,4 +170,26 @@
     <string name="sport_ai_functions_description">Sender-Empfehlung im Sport-Hub und die KI-Auswertung einer eingefügten Anbieter-Nachricht</string>
     <string name="sport_ai_functions_off_hint">Die KI-Funktionen sind ausgeschaltet. Aktiviere sie unter Einstellungen › App.</string>
     <string name="sport_ai_error_disabled">Die KI-Funktionen sind in den Einstellungen ausgeschaltet.</string>
+    <!-- Hosted addon (Sport-Addon als Quelle): das StreamFree-Addon aus addon/, auf dem LAN-Server. -->
+    <string name="addon_title">Sport-Addon</string>
+    <string name="addon_address">Addon-Adresse</string>
+    <string name="addon_check">Addon prüfen</string>
+    <string name="addon_checking">Addon wird geprüft…</string>
+    <string name="addon_line_check">Die Spieleliste vom Addon holen</string>
+    <string name="addon_line_ready">Addon erreichbar</string>
+    <string name="addon_line_failed">Das Addon hat nicht geantwortet</string>
+    <string name="addon_failed_http">Das Addon antwortete mit HTTP %1$d</string>
+    <string name="addon_status_failed">Fehlgeschlagen</string>
+    <string name="addon_live_now">Jetzt live</string>
+    <string name="addon_live">Live</string>
+    <string name="addon_add">Als Playlist hinzufügen</string>
+    <string name="addon_default_name">StreamFree Sports</string>
+    <string name="addon_no_fixtures">Das Addon hat gerade keine Spiele. Schau kurz vor Anpfiff wieder vorbei.</string>
+    <string name="addon_problem">Problem</string>
+    <string name="addon_help_address">Wo das Addon läuft. Das StreamFree-Addon aus diesem Projekt hört auf Port 7100 des Servers; die Adresse darf ohne http:// eingegeben werden, das wird ergänzt. Die Spiele kommen als Playlist mit Guide an, deshalb gleicht der Sport-Hub sie wie jeden anderen Sender mit ESPN ab.</string>
+    <string name="addon_help_check">Fragt das Addon nach Manifest und aktuellen Spielen. Gespeichert wird erst beim Hinzufügen.</string>
+    <plurals name="addon_more">
+        <item quantity="one">%1$d weiteres Spiel</item>
+        <item quantity="other">%1$d weitere Spiele</item>
+    </plurals>
 </resources>

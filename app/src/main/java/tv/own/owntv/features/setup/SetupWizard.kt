@@ -65,13 +65,13 @@ import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 
-private enum class Step { WELCOME, DISPLAY_SIZE, DISCLAIMER, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
+private enum class Step { WELCOME, DISPLAY_SIZE, DISCLAIMER, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, ADDON, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
 
 /**
- * Onboarding for one profile (P10B-W1 … W9). [firstRun] shows language/welcome/disclaimer; otherwise it
+ * Onboarding for one profile (P10B-W1 â€¦ W9). [firstRun] shows language/welcome/disclaimer; otherwise it
  * starts at profile creation (used by "Add profile"). [onDone] receives the newly active profile id and
  * enters the app; [onCancel] backs out (to the gate). Every step is a [WizardFrame]; adding a playlist
- * reuses the Settings › Add a source pages (P10B step 4).
+ * reuses the Settings â€º Add a source pages (P10B step 4).
  */
 @Composable
 fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit, modifier: Modifier = Modifier) {
@@ -95,7 +95,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     // raises the section dialog below; picking a file no longer starts the restore by itself.
     var restoreFile by remember { mutableStateOf<java.io.File?>(null) }
     var restoreSections by remember { mutableStateOf<Set<tv.own.owntv.core.backup.BackupManager.Section>?>(null) }
-    // "Hardware settings from the other device" — asked with the sections, carried like them.
+    // "Hardware settings from the other device" â€” asked with the sections, carried like them.
     val restoreDeviceSettings = remember { mutableStateOf(false) }
 
     // Refresh the "existing playlists" availability whenever we land on the add-content step.
@@ -115,7 +115,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 back = WizardAction(stringResource(R.string.common_back), { step = Step.DISPLAY_SIZE }),
                 next = WizardAction(stringResource(R.string.setup_i_understand), { step = Step.SETUP_CHOICE }, rememberFirstFocus()),
             )
-            // First decision: start fresh or bring everything back from a backup (profiles included —
+            // First decision: start fresh or bring everything back from a backup (profiles included â€”
             // no point creating a profile first that the restore would replace).
             Step.SETUP_CHOICE -> {
                 val first = rememberFirstFocus()
@@ -153,6 +153,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 hasExisting = existing.isNotEmpty(),
                 onPhone = { step = Step.ADD_SOURCE_REMOTE },
                 onType = { step = Step.ADD_SOURCE },
+                onAddon = { step = Step.ADDON },
                 onExisting = { step = Step.EXISTING },
                 onImport = { backupOrigin = Step.ADD_CONTENT; step = Step.IMPORT_BACKUP_CHOOSER },
                 onSkip = { vm.finish(onDone) },
@@ -194,12 +195,23 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onBack = { step = Step.ADD_CONTENT },
                 showDefaultToggle = false, // first playlist in setup: nothing to be "default" over yet
             )
+            // Hosted StreamFree addon (addon/): it serves a playlist + guide, so onboarding imports it
+            // through the same M3U path every other playlist takes.
+            Step.ADDON -> AddonScreen(
+                onAdd = { name, playlistUrl, epgUrl ->
+                    importName = name.ifBlank { defaultPlaylistName }
+                    vm.startM3u(importName!!, playlistUrl, "", epgUrl, PlaylistRefresh.OFF)
+                    importOrigin = Step.ADDON
+                    step = Step.IMPORTING
+                },
+                onBack = { step = Step.ADD_CONTENT },
+            )
             Step.IMPORTING -> ImportProgressStep(
                 state = importState,
                 progress = progress,
                 name = importName,
                 onContinue = { vm.finish(onDone) }, // playlist + its EPG synced (auto)
-                // "Add a TV guide" (owner, 1 Oct): finish setup, then the shell opens Settings › EPG sources › Add.
+                // "Add a TV guide" (owner, 1 Oct): finish setup, then the shell opens Settings â€º EPG sources â€º Add.
                 onAddGuide = { PendingShellRequest.addEpg = true; vm.finish(onDone) },
                 onRetry = { vm.reset(); step = importOrigin },
                 onCancel = { vm.cancelImport(); step = importOrigin },
@@ -255,7 +267,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onBack = { vm.reset(); restoreFile = null; restoreSections = null; step = backupOrigin },
             )
         }
-        // A file is chosen and nothing has been asked of it yet — so ask, over whatever is behind.
+        // A file is chosen and nothing has been asked of it yet â€” so ask, over whatever is behind.
         restoreFile?.takeIf { restoreSections == null }?.let { file ->
             SectionPickerDialog(
                 title = stringResource(R.string.settings_backup_what_restore),
@@ -274,7 +286,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 warnWithoutSources = firstRun,
             )
         }
-        // Semi-auto EPG: after the first playlist imports, ask → sync (live count) → done (overlays "All set!").
+        // Semi-auto EPG: after the first playlist imports, ask â†’ sync (live count) â†’ done (overlays "All set!").
         EpgSyncDialog(
             state = epgSync,
             onSync = vm::syncPendingEpg,
@@ -307,9 +319,9 @@ private fun WelcomeStep(onNext: () -> Unit) {
 }
 
 /**
- * W2, first-run interface size (#179): UI zoom and text size as steppers (◀ ▶) and a
- * sample row to judge them by. Both steppers write straight through, so the whole step — rows and
- * sample alike — resizes as the user presses. No draft state and no Apply.
+ * W2, first-run interface size (#179): UI zoom and text size as steppers (â—€ â–¶) and a
+ * sample row to judge them by. Both steppers write straight through, so the whole step â€” rows and
+ * sample alike â€” resizes as the user presses. No draft state and no Apply.
  */
 @Composable
 private fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
@@ -372,7 +384,7 @@ private fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
     }
 
     // Accept-the-risk gate for zoom below LOW_RAM_WARN (#51), the same prompt Settings shows. One
-    // button, focus locked in every D-pad direction — OK accepts and applies the pending step, Back
+    // button, focus locked in every D-pad direction â€” OK accepts and applies the pending step, Back
     // cancels and leaves the zoom where it was.
     pendingLowZoom?.let { target ->
         // The same low-memory question Settings asks, as a Stage question with focus on Cancel.
@@ -397,7 +409,7 @@ private fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
 }
 
 /**
- * W6, Who's watching?: Name, Avatar (◀ ▶ through the pictures, the letter first), Kids profile and an
+ * W6, Who's watching?: Name, Avatar (â—€ â–¶ through the pictures, the letter first), Kids profile and an
  * optional PIN, then Create profile.
  */
 @Composable
@@ -465,7 +477,7 @@ private fun AvatarStrip(ids: List<Int>, chosen: Int) {
 
 /** W7, Add a playlist: From your phone, Type it here, Import (and Existing when another profile has some). */
 @Composable
-private fun AddContentStep(hasExisting: Boolean, onPhone: () -> Unit, onType: () -> Unit, onExisting: () -> Unit, onImport: () -> Unit, onSkip: () -> Unit) {
+private fun AddContentStep(hasExisting: Boolean, onPhone: () -> Unit, onType: () -> Unit, onAddon: () -> Unit, onExisting: () -> Unit, onImport: () -> Unit, onSkip: () -> Unit) {
     val first = rememberFirstFocus()
     WizardFrame(
         step = WizardStep.PLAYLIST,
@@ -480,6 +492,7 @@ private fun AddContentStep(hasExisting: Boolean, onPhone: () -> Unit, onType: ()
             listOfNotNull(
                 WizardCard(OwnTVIcon.PHONE, stringResource(R.string.setup_from_phone), stringResource(R.string.setup_phone_card_line), onPhone),
                 WizardCard(OwnTVIcon.PENCIL, stringResource(R.string.settings_add_type_here), stringResource(R.string.settings_line_add_type_here), onType),
+                WizardCard(OwnTVIcon.SPORT, stringResource(R.string.addon_title), stringResource(R.string.addon_line_check), onAddon),
                 if (hasExisting) WizardCard(OwnTVIcon.PLAYLIST, stringResource(R.string.setup_existing), stringResource(R.string.setup_use_other_profile_playlists), onExisting) else null,
                 WizardCard(OwnTVIcon.DOWNLOADS, stringResource(R.string.setup_import), stringResource(R.string.setup_restore_backup_file), onImport),
             ),
@@ -609,7 +622,7 @@ private fun ImportProgressStep(
                 sub = stringResource(R.string.setup_watching_during_import),
                 back = WizardAction(stringResource(R.string.common_cancel), onCancel),
                 // Enter the app right away; the import keeps running (VM is activity-scoped) and content
-                // appears as it lands — no need to sit through a big movies/series sync.
+                // appears as it lands â€” no need to sit through a big movies/series sync.
                 next = WizardAction(stringResource(R.string.setup_run_in_background), onBackground, rememberFirstFocus()),
             ) {
                 StageSettingRow(

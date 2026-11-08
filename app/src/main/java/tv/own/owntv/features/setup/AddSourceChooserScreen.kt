@@ -16,6 +16,9 @@ import tv.own.owntv.ui.components.OwnTVIcon
 /**
  * Playlists › Add a source (P10B-08): **From your phone** (fill the form on another device over the LAN)
  * or **Type it here** (Xtream / M3U / Stalker with the remote), each explained in the panel.
+ *
+ * A third row opens the hosted **Sports addon** (StreamFree fixtures as a playlist) when the caller
+ * provides it — it is its own screen because it has one field and a live preview, not a provider form.
  */
 @Composable
 fun AddSourceChooserScreen(
@@ -23,6 +26,7 @@ fun AddSourceChooserScreen(
     onManual: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onAddon: (() -> Unit)? = null,
 ) {
     val rowsFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { rowsFocus.requestFocus() } }
@@ -65,5 +69,16 @@ fun AddSourceChooserScreen(
             onClick = onManual,
             help = SettingHelp(here, stringResource(R.string.settings_help_add_type_here), hints = hints),
         )
+        if (onAddon != null) {
+            val addon = stringResource(R.string.addon_title)
+            StageSettingRow(
+                icon = OwnTVIcon.SPORT,
+                title = addon,
+                desc = stringResource(R.string.addon_line_check),
+                value = SettingValue.Opens(null),
+                onClick = onAddon,
+                help = SettingHelp(addon, stringResource(R.string.addon_help_address), hints = hints),
+            )
+        }
     }
 }

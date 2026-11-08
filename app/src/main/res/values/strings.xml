@@ -170,4 +170,26 @@
     <string name="sport_ai_functions_description">Channel recommendation in the Sports hub and the AI reading of a pasted provider message</string>
     <string name="sport_ai_functions_off_hint">The AI functions are switched off. Turn them on under Settings › App.</string>
     <string name="sport_ai_error_disabled">The AI functions are switched off in the settings.</string>
+    <!-- Hosted addon (Sports addon source): the StreamFree addon in addon/, deployed on the LAN server. -->
+    <string name="addon_title">Sports addon</string>
+    <string name="addon_address">Addon address</string>
+    <string name="addon_check">Check addon</string>
+    <string name="addon_checking">Checking the addon…</string>
+    <string name="addon_line_check">Fetch the fixture list from the addon</string>
+    <string name="addon_line_ready">Addon reachable</string>
+    <string name="addon_line_failed">The addon did not answer</string>
+    <string name="addon_failed_http">The addon answered with HTTP %1$d</string>
+    <string name="addon_status_failed">Failed</string>
+    <string name="addon_live_now">Live now</string>
+    <string name="addon_live">Live</string>
+    <string name="addon_add">Add as playlist</string>
+    <string name="addon_default_name">StreamFree Sports</string>
+    <string name="addon_no_fixtures">The addon has no fixtures right now. Check back near kick-off.</string>
+    <string name="addon_problem">Problem</string>
+    <string name="addon_help_address">Where the addon is running. The StreamFree addon from this project listens on port 7100 of the server; the address may be typed without http://, it is added for you. The fixtures it publishes arrive as a playlist with a guide, so the Sports hub matches them against ESPN like any other channel.</string>
+    <string name="addon_help_check">Asks the addon for its manifest and its current fixtures. Nothing is saved until you add it.</string>
+    <plurals name="addon_more">
+        <item quantity="one">%1$d more fixture</item>
+        <item quantity="other">%1$d more fixtures</item>
+    </plurals>
 </resources>
