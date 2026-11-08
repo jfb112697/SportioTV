@@ -52,6 +52,8 @@ Open source, GPLv3. Forked from [OwnTV](https://github.com/ahXN00/OwnTV) — tha
 - **Fixture → channel matching** across channel names and guide text, with a language filter
   (exact event channels always pass); single-sport views for tennis, Formula 1 and more
 - **Manage leagues, teams and athletes from a phone** (QR companion page over Wi-Fi)
+- **Hosted sports addon** (this fork): add a StreamFree addon server as a source and its live
+  fixtures arrive as channels with a guide — see [docs/ADDON.md](docs/ADDON.md)
 
 ### 📡 Live TV
 - **Two engines** — mpv for compatibility, ExoPlayer for instant start, with automatic fallback
