@@ -70,10 +70,20 @@ class AddonClientTest {
     @Test
     fun `addresses are normalised to a base URL`() {
         val client = AddonClient(okhttp3.OkHttpClient())
-        assertEquals("http://server.local:7100", client.normaliseBaseUrl("server.local:7100"))
-        assertEquals("http://server.local:7100", client.normaliseBaseUrl("  http://server.local:7100/  "))
+        assertEquals("http://192.168.1.71:7100", client.normaliseBaseUrl("192.168.1.71:7100"))
+        assertEquals("http://192.168.1.71:7100", client.normaliseBaseUrl("  http://192.168.1.71:7100/  "))
         assertEquals("https://addon.example", client.normaliseBaseUrl("https://addon.example/"))
         assertEquals("", client.normaliseBaseUrl("   "))
+    }
+
+    @Test
+    fun `a bare scheme is not an address`() {
+        // "http" used to become "http://http", and the import failed on a URL nobody typed.
+        val client = AddonClient(okhttp3.OkHttpClient())
+        assertEquals("", client.normaliseBaseUrl("http"))
+        assertEquals("", client.normaliseBaseUrl("https"))
+        assertEquals("", client.normaliseBaseUrl("http://"))
+        assertEquals("", client.normaliseBaseUrl("https:///"))
     }
 
     @Test

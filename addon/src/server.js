@@ -174,9 +174,10 @@ async function handleM3u(req, res, url) {
 }
 
 async function handleEpg(req, res, url) {
+  // Same board the playlist is built from, so a channel and its programme never disagree: the guide
+  // must not describe channels the playlist does not carry.
   const fixtures = await publishedFixtures(req, {
     category: url.searchParams.get("category") || "",
-    includePast: true,
   });
   send(res, 200, buildXmltv(fixtures), "application/xml; charset=utf-8");
 }

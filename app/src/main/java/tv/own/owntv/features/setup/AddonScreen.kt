@@ -56,6 +56,12 @@ fun AddonScreen(
 
     var address by remember { mutableStateOf(initialUrl.ifBlank { DefaultAddonAddress }) }
     var state by remember { mutableStateOf<AddonUi>(AddonUi.Idle) }
+    /**
+     * The base URL that the current [state] verdict belongs to. Submit builds the playlist from
+     * this, never from the live text field: editing the field after a successful check must not
+     * produce a URL that was never checked (that is how `http` became `http://http/playlist.m3u`).
+     */
+    var checkedBase by remember { mutableStateOf("") }
     val ok = stringResource(R.string.common_ok)
     val back = stringResource(R.string.common_back)
     val parent = stringResource(R.string.setup_add_source)
@@ -63,11 +69,17 @@ fun AddonScreen(
 
     fun check(url: String) {
         if (state is AddonUi.Checking) return
+        val base = client.normaliseBaseUrl(url)
+        checkedBase = ""
+        if (base.isEmpty()) {
+            state = AddonUi.Failed(AddonClient.Failure.UNRESOLVED_HOST, 0)
+            return
+        }
         state = AddonUi.Checking
         scope.launch {
-            state = runCatching { client.load(url) }
+            state = runCatching { client.load(base) }
                 .fold(
-                    onSuccess = { AddonUi.Ready(it) },
+                    onSuccess = { checkedBase = base; AddonUi.Ready(it) },
                     onFailure = { error ->
                         val failure = (error as? AddonClient.AddonException)
                             ?: AddonClient.AddonException(AddonClient.Failure.UNREACHABLE)
@@ -91,7 +103,7 @@ fun AddonScreen(
             StageActionColumn(
                 listOf(
                     StageAction(OwnTVIcon.DOWNLOADS, submitLabel, {
-                        val base = client.normaliseBaseUrl(address)
+                        val base = checkedBase.ifBlank { client.normaliseBaseUrl(address) }
                         val snapshot = (state as? AddonUi.Ready)?.snapshot
                         onAdd(
                             snapshot?.name?.takeIf { it.isNotBlank() } ?: defaultName,
@@ -105,7 +117,6 @@ fun AddonScreen(
             )
         }
     }
-
     StageFullPage(
         parents = listOf(parent),
         title = stringResource(R.string.addon_title),
@@ -119,7 +130,7 @@ fun AddonScreen(
             icon = OwnTVIcon.NETWORK,
             label = stringResource(R.string.addon_address),
             value = address,
-            onValueChange = { address = it; state = AddonUi.Idle },
+            onValueChange = { address = it; state = AddonUi.Idle; checkedBase = "" },
             help = SettingHelp(
                 stringResource(R.string.addon_address),
                 stringResource(R.string.addon_help_address),

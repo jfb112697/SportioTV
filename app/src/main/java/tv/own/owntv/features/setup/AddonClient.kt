@@ -77,16 +77,24 @@ class AddonClient(client: OkHttpClient) {
 
     /**
      * Normalises what the user typed into a base URL: adds `http://` when no scheme is given and
-     * drops a trailing slash, so `server.local:7100` and `http://server.local:7100/` both work.
+     * drops a trailing slash, so `192.168.1.71:7100` and `http://192.168.1.71:7100/` both work.
+     *
+     * Returns "" for input that is not an address at all — an empty string, or a bare scheme such as
+     * `http` / `https://` with no host behind it. Without this, `http` used to normalise to
+     * `http://http` and the import failed on a URL nobody meant to type.
      */
     fun normaliseBaseUrl(raw: String): String {
         val trimmed = raw.trim().trimEnd('/')
         if (trimmed.isEmpty()) return ""
-        return if (trimmed.startsWith(SCHEME_HTTP) || trimmed.startsWith(SCHEME_HTTPS)) {
+        val withScheme = if (trimmed.startsWith(SCHEME_HTTP) || trimmed.startsWith(SCHEME_HTTPS)) {
             trimmed
         } else {
             "$SCHEME_HTTP$trimmed"
         }
+        // A host is what is left once the scheme is stripped; a bare "http" has nothing behind it.
+        val host = withScheme.removePrefix(SCHEME_HTTP).removePrefix(SCHEME_HTTPS).trim()
+        if (host.isEmpty() || host.startsWith("/")) return ""
+        return withScheme
     }
 
     /** The playlist URL to import. */

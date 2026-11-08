@@ -185,7 +185,7 @@
     <string name="addon_status_failed">Failed</string>
     <string name="addon_live_now">Live now</string>
     <string name="addon_live">Live</string>
-    <string name="addon_add">Add as playlist</string>
+    <string name="addon_add">Add as source</string>
     <string name="addon_default_name">StreamFree Sports</string>
     <string name="addon_no_fixtures">The addon has no fixtures right now. Check back near kick-off.</string>
     <string name="addon_problem">Problem</string>

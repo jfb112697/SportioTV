@@ -151,13 +151,19 @@ function attr(value) {
 }
 
 /**
- * One channel per fixture. The channel name is the fixture name unchanged — that is what Sportio's
- * Sports Hub matches against ESPN fixtures by team name, so decorating it with a source label would
- * break the matching it exists for.
+ * One channel per **live** fixture. The channel name is the fixture name unchanged — that is what
+ * Sportio's Sports Hub matches against ESPN fixtures by team name, so decorating it with a source
+ * label would break the matching it exists for.
+ *
+ * Only live fixtures are listed: a fixture that has not started has no stream yet, and StreamFree
+ * answers 404 for it. An importer that probes the playlist (Sportio's does) fails on the first dead
+ * URL, so listing an upcoming fixture would break the whole import rather than add a channel that
+ * starts later. [buildM3u] therefore takes the board and keeps the live entries.
  */
 export function buildM3u(fixtures, baseUrl) {
   const lines = ["#EXTM3U"];
   for (const fixture of fixtures) {
+    if (!fixture.live) continue;
     const source = playableSources(fixture)[0];
     if (!source) continue;
     const logo = fixture.thumbnail ? ` tvg-logo="${attr(fixture.thumbnail)}"` : "";
@@ -196,8 +202,9 @@ function xmltvTime(ms) {
 }
 
 /**
- * A guide with one programme per fixture, spanning kick-off -15min to +3h. Entries without a
- * kick-off time get a rolling 4-hour block so they still show as "now" in the guide.
+ * A guide with one programme per **live** fixture, spanning kick-off -15min to +3h. It mirrors
+ * [buildM3u]: the guide describes the channels the playlist actually carries, so a channel and its
+ * programme never disagree. An entry without a kick-off time gets a rolling 4-hour block.
  */
 export function buildXmltv(fixtures) {
   const now = Date.now();
@@ -205,6 +212,8 @@ export function buildXmltv(fixtures) {
   const programmes = [];
 
   for (const fixture of fixtures) {
+    if (!fixture.live) continue;
+    if (!playableSources(fixture).length) continue;
     const id = addonId(fixture);
     channels.push(
       `  <channel id="${xmlEscape(id)}"><display-name>${xmlEscape(fixture.name)}</display-name></channel>`,

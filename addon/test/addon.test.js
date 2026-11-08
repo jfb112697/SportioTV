@@ -125,7 +125,7 @@ test("isCurrent drops events that finished long ago", () => {
   assert.equal(isCurrent({ ...ENTRY, match_timestamp: 0 }, Date.now()), true);
 });
 
-test("buildM3u writes one channel per fixture with the fixture name intact", () => {
+test("buildM3u writes one channel per live fixture with the fixture name intact", () => {
   const fixture = toFixture(ENTRY, "http://h");
   const m3u = buildM3u([fixture], "http://h");
   assert.match(m3u, /^#EXTM3U/);
@@ -135,18 +135,42 @@ test("buildM3u writes one channel per fixture with the fixture name intact", () 
   assert.match(m3u, new RegExp(`http://h/play/basketball/${KEY}\\.m3u8`));
 });
 
+test("buildM3u skips a fixture that is not live yet", () => {
+  // An upcoming fixture has no stream: StreamFree 404s, and an importer that probes the playlist
+  // would fail the whole import on it. Only live entries are published.
+  const upcoming = toFixture(
+    {
+      ...ENTRY,
+      sources: ENTRY.sources.map((source) => ({ ...source, live: false })),
+    },
+    "http://h",
+  );
+  assert.equal(upcoming.live, false);
+  assert.equal(buildM3u([upcoming], "http://h").trim(), "#EXTM3U");
+});
+
 test("buildM3u skips fixtures with no playable source", () => {
   const fixture = toFixture({ ...ENTRY, sources: [] }, "http://h");
   assert.equal(buildM3u([fixture], "http://h").trim(), "#EXTM3U");
 });
 
-test("buildXmltv emits a channel and a programme per fixture", () => {
+test("buildXmltv emits a channel and a programme per live fixture", () => {
   const fixture = toFixture(ENTRY, "http://h");
   const xml = buildXmltv([fixture]);
   assert.match(xml, /<channel id="sf:new-york-knicks-vs-cleveland-cavaliers">/);
   assert.match(xml, /<programme start="\d{14} \+0000" stop="\d{14} \+0000"/);
   assert.match(xml, /<title lang="en">New York Knicks vs Cleveland Cavaliers<\/title>/);
   assert.ok(xml.trim().endsWith("</tv>"));
+});
+
+test("buildXmltv describes only the channels the playlist carries", () => {
+  const upcoming = toFixture(
+    { ...ENTRY, sources: ENTRY.sources.map((source) => ({ ...source, live: false })) },
+    "http://h",
+  );
+  const xml = buildXmltv([upcoming]);
+  assert.doesNotMatch(xml, /<channel /);
+  assert.doesNotMatch(xml, /<programme /);
 });
 
 test("buildXmltv escapes markup in names", () => {
